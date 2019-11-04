@@ -1,0 +1,18 @@
+Microblog/
+    microblog/
+        __init__.py
+        cli.py
+        email.py
+        errors.py
+        forms.py
+        models.py
+        routes.py
+        translate.py
+        static/
+        templates/
+        translations/
+    babel.cfg
+    config.py
+    microblog.db
+    tests.py
+    migrations/

@@ -1,0 +1,40 @@
+# Spanish translations for PROJECT.
+# Copyright (C) 2019 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2019.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2019-09-21 13:24+0200\n"
+"PO-Revision-Date: 2019-09-14 10:02+0200\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.7.0\n"
+
+#: microblog/templates/_post.html:34
+msgid "Translate"
+msgstr "Traducir"
+
+#: microblog/templates/base.html:102
+msgid "Error: Could not contact server."
+msgstr "Error: el servidor no pudo ser contactado."
+
+#: microblog/templates/errors/404.html:4
+msgid "File not found"
+msgstr "Página no encontrada"
+
+#: microblog/templates/errors/500.html:4
+msgid "An unexpected error has occurred"
+msgstr "Ha ocurrido un error inesperado"
+
+#: microblog/templates/errors/500.html:5
+msgid "The administrator has been notified. Sorry for inconvenience!"
+msgstr "El administrador ha sido notificado. Lamentamos la inconveniencia!"
+

@@ -1,0 +1,245 @@
+{% extends "bootstrap/base.html" %}
+
+{% block title %}
+{% if title %}{{ title }} - Microblog{% else %}Welcome{% endif %}
+{% endblock %}
+
+{% block navbar %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<style media="screen">
+    .navbar li > a {
+        height: 60px;
+    }
+    .navbar-right li.myuser:hover {
+        background-color: #0ecf42;
+    }
+    .fa {
+        font-size: 30px;
+        color: #fff;
+        margin-right: 5px;
+        display: inline-block;
+    }
+    a:hover .icon-left {
+        color: #0ecf42;
+    }
+    .icon-msg:hover {
+        box-shadow: 0px 0px 15px 10px rgba(195,201,195,0.3);
+        background-color: rgba(195,201,195,0.3);
+        color: #0ecf42;
+    }
+    .navbar input {
+        background-color: #343434 !important;
+    }
+    .navbar input:hover, input:focus {
+        background-color: #fff !important;
+    }
+    @media (min-width: 76px) {
+        .navbar-right li.myuser {
+            border-left: 1px dashed #fff;
+            background-color: none;
+        }
+    }
+</style>
+<nav class="navbar navbar-inverse">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <!--visual trick: (each icon-bar is one belt) -->
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="{{ url_for('main.index') }}"><span class="h3">Microblog</span></a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            {% if g.search_form %}
+            <form class="navbar-form navbar-left" style="margin-top: 12px;" action="{{ url_for('main.search')}}" method="get">
+                                                <!-- when empty the form is sent to the same
+                                                    page that rendered the form. Because of
+                                                    this 'search form' appearch on every page
+                                                    I need to specify explicitly where it needs
+                                                    to be sumbitted -->
+                <div class="form-group">
+                    {{ g.search_form.q(size=20, class='form-control',
+                                    placeholder=g.search_form.q.label.text) }}
+                </div>
+            </form>
+            {% endif %}
+            <ul class="nav navbar-nav">
+                <li><a href="{{ url_for('main.index') }}"><i class="fa fa-home icon-left"></i>Home</a></li>
+                <li><a href="{{ url_for('main.explore') }}"><i class="fa fa-globe icon-left"></i>Explore</a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                {% if current_user.is_anonymous %}
+                <li class="myuser"><a href="{{ url_for('auth.login') }}">Sign In</a></li>
+                <li class="myuser"><a href="{{ url_for('auth.register') }}">Sign Up</a></li>
+                {% else %}
+                <li><a href="{{ url_for('main.messages') }}"><i class="fa fa-envelope icon-msg"></i>
+                    {% set new_messages = current_user.new_messages() %}
+                    <span id="message_count" class="badge"
+                        style="visibility: {% if new_messages %}visible
+                                        {% else %}hidden {% endif %};">
+                        {{ new_messages }}
+                    </span>
+                </a></li>
+                <li class="myuser"><a href="{{ url_for('main.user', username=current_user.username) }}">Profile</a></li>
+                <li class="myuser"><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-info" role="alert">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    {# application content needs to be provided in the app_content block #}
+    {% block app_content %}{% endblock %}
+</div>
+{% endblock %}
+
+<!--to use JS 'moment.js' library (convert time/ timezone) all templates of the
+application must include this libary.
+I could use '<script>' tag that imports library OR
+I can use 'Flask-Moment' function 'moment.include_moment()' that generates '<script>'-->
+{% block scripts %}
+    <!--'super()' preserves the content from the base template, otherwise any content
+    defined for this block in the base template will be lost. -->
+    {{ super() }}
+    <!-- {{ moment.include_jquery() }} I shouldn't load it because it already
+    loaded by Bootstrap and duplicate it may cause some errors -->
+    {{ moment.include_moment() }}
+
+    <!--translation function replacing 'Translate' link with translated text: -->
+    <script type="text/javascript">
+        function translate(sourceElem, destElem, sourceLang, destLang) {
+            // jQuery adding loading GIF in the place of 'Translate' link:
+            $(destElem).html('<img src="{{ url_for('static', filename='loading.gif') }}">');
+
+            // sending with jQuery 'POST' 'request' to the '/translate' URL:
+            $.post('/translate', {
+                // '$.post(URL)' works like 'Submit' button with the 'form'.
+                // I can access outcome with 'request.form' (request.form['text']).
+                text: $(sourceElem).text(),
+                source_language: sourceLang,
+                dest_language: destLang
+                // below used 'promises' callback functions. It allows chain
+                // the callbacks to the return value (this case: to the
+                // return value of the '$.post()' )
+            }).done(function(response){
+                // '.done' syntax specifies what I want to do when the response is received.
+                $(destElem).text(response['text'])
+                                    // return value of the 'translate_text()' ('routes.py')
+                                    // is 'jsonify()' - HTTP Response object (dict).
+            }).fail(function() {
+                // '.fail' syntax specifies what to do when the error ocurrs.
+                $(destElem).text("{{ _('Error: Could not contact server.')}}");
+            });
+        }
+
+
+        // To run JS function as soon as the page is loaded I should wrap it
+        // inside a jQuery '$( ... )' because jQuery is loaded as a dependency
+        // of Bootstrap at the very beginning.
+        // Initialize usernames' links as popovers when page is loaded:
+        $(function() {
+            var timer = null;
+            var xhr = null;
+
+            //       element.hover(handlerIn, handlerOut).
+            $('.user_popup').hover( // If function is called on collection
+                                    // of elements ( <elements>.hover )
+                                    // jQuery conveniently attaches the event
+                                    // to all of them.
+
+                // Function invoked when the user moves mouse pointer into element:
+                function(event) {   // browser sent hover 'event' object immediately
+                                    // after mouse enters the affected element.
+
+                    // User move mouse pointer into target event:
+                    var elem = $(event.currentTarget);
+                    timer = setTimeout(function() {
+                            // 'setTimeOut()' is available in browser environment.
+                            // It takes 2 arguments: a function and time in milisecs.
+                            // It invokes function after the given delay in milisecs.
+                        timer = null;
+                        xhr = $.ajax(
+                            '/user/' + elem.first().text().trim() + '/popup').done(
+                            function(data) {
+                                    // 'data' response from server - HTML content
+                                    // that will be used in 'popover'.
+                                xhr = null;
+                                // Create and display popup:
+                                elem.popover({              // (initialization call
+                                    trigger: 'manual',      // accepts a number of
+                                    html: true,             // options that configure
+                                    animation: false,       // the 'popup' ).
+                                    container: elem, //Indicates parent of 'popover'.
+                                    content: data
+                                }).popover('show');
+                                // As documented by the extension, when new Flask-Moment
+                                // ('last_seen' time) elements are added via Ajax
+                                // I should render them with:
+                                flask_moment_render_all();
+                            }
+                        );
+                    }, 1000);
+                },
+
+                // Function invoked when the user moves mouse pointer out of element:
+                function(event){   // browser sent hover 'event' object immediately
+                                    // after mouse enters the affected element.
+
+                    // User move mouse pointer out of target event:
+                    var elem = $(event.currentTarget);
+                    if (timer) {
+                        // if 'timer' is active, cancel it:
+                        clearTimeout(timer); // otherwise 'popup' appears after
+                        timer = null;       // 1 second even if mouse is out of
+                    }                       // 'target' element.
+                    else if (xhr) {
+                        xhr.abort(); // abort '$.ajax' asynchronous 'request'.
+                        xhr = null;
+                    }
+                    else {
+                        // Destroy popup:
+                        elem.popover('destroy');
+                    }
+                }
+            );
+        });
+
+
+        function set_message_count(n){
+            $('#message_count').text(n);
+            $('#message_count').css('visibility', n ? 'visible' : 'hidden')
+        }
+
+
+        {% if current_user.is_authenticated %}
+        $(function() { // jQuery pattern that executes function after page is loaded.
+            var since = 0;
+            setInterval(function() { //'setInterval(f(), interval)': calls 'f()' every 'interval'
+                $.ajax("{{ url_for('main.notifications') }}?since=" + since).done(
+                    function(notifications) {
+                        for (var i = 0; i < notifications.length; i++) {
+                            if (notifications[i].name == 'unread_message_count')
+                                set_message_count(notifications[i].data);
+                            since = notifications[i].timestamp;
+                        }
+                    }
+                );
+            }, 10000);
+        });
+        {% endif %}
+    </script>
+{% endblock %}
