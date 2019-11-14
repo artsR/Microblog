@@ -21,7 +21,7 @@
             <span id="post{{ post.id }}">{{ post.body }}</span>
             <br>
             <span style="font-size:10px">{{ moment(post.timestamp).fromNow() }}
-                {% if post.language != g.locale %}
+                {% if post.language and post.language != g.locale %}
                 <!--Below 'span' added to provide ID that helps jQuery identify element.
                 No visual impact: -->
                 <span id="translation{{ post.id }}">

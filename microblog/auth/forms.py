@@ -1,8 +1,9 @@
+import re
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField
 from wtforms.validators import DataRequired, ValidationError, Email, EqualTo
 from microblog.models import User
-
+from flask import flash
 
 
 class LoginForm(FlaskForm): # they know how render themselves as HTML.
@@ -31,6 +32,16 @@ class RegistrationForm(FlaskForm):
         user = User.query.filter_by(email=email.data).first()
         if user is not None:
             raise ValidationError('This email already has been used. Please use a different one.')
+
+    # def validate_password(self, password):
+    #     # there is problem w/ 'password'. 'HTML Input field' sent instead of password.
+    #     pattern = re.compile(r'^(?=.*[a-zA-Z])(?=.*[0-9]+)\w{5,}$')
+    #     flash(password)
+    #     if not bool(pattern.search(str(password))):
+    #         raise ValidationError(
+    #             'The password should contain at least one'
+    #             + ' letter and one digit and has at least length of 5'
+    #         )
 
 
 class ResetPasswordRequestForm(FlaskForm):

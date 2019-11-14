@@ -53,6 +53,8 @@ def create_app(config_class=Config):
     from microblog.errors import bp as errors_bp
     from microblog.auth import bp as auth_bp
     from microblog.main import bp as main_bp
+    from microblog.api import bp as api_bp
+    app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(errors_bp)
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(main_bp)     #^ [optional] attach a 'blueprint' under a URL prefix.
